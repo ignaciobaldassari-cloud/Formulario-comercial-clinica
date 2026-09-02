@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Videollamada — GDS</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #283545;
+    --bg-header: #1f2b38;
+    --bg-input: #1e2a36;
+    --border: #344558;
+    --accent: #6fa587;
+    --accent-bg: rgba(111,165,135,.18);
+    --white: #e6eaee;
+    --gray: #8c99a6;
+    --gray-light: #a3adb8;
+  }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-header);
+  }
+  .header-brand { font-weight: 600; font-size: 14px; color: var(--accent); letter-spacing: -0.2px; }
+  .header-counter { color: var(--gray); font-size: 13px; }
+  .progress-bar { height: 3px; background: var(--bg-header); }
+  .progress-fill { height: 100%; background: var(--accent); transition: width .4s ease; border-radius: 0 2px 2px 0; }
+  .content {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 48px 24px; max-width: 560px; width: 100%; margin: 0 auto;
+  }
+  .section-label { font-size: 12px; color: var(--accent); font-weight: 600; letter-spacing: .4px; margin-bottom: 12px; align-self: flex-start; }
+  .brand-center { color: var(--accent); font-size: 16px; font-weight: 500; margin-bottom: 12px; text-align: center; letter-spacing: -.1px; }
+  .title { font-size: 22px; font-weight: 700; line-height: 1.35; margin-bottom: 28px; letter-spacing: -.4px; width: 100%; }
+  .title.welcome { font-size: 28px; text-align: center; }
+  .subtitle { color: var(--gray); font-size: 15px; margin-bottom: 28px; line-height: 1.55; width: 100%; }
+  .subtitle.welcome { text-align: center; max-width: 420px; margin-left: auto; margin-right: auto; }
+  .time-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 6px 16px; color: var(--gray); font-size: 13px; margin-bottom: 32px;
+  }
+  .pills { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; margin-bottom: 16px; }
+  .pills.col { flex-direction: column; max-width: 400px; }
+  .pill {
+    padding: 10px 20px; border-radius: 24px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--gray-light); cursor: pointer; font-size: 14px;
+    font-family: inherit; transition: all .2s;
+  }
+  .pill.active { border: 2px solid var(--accent); background: var(--accent-bg); color: var(--accent); }
+  .text-input, .text-area {
+    width: 100%; padding: 14px 18px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-input);
+    color: var(--white); font-size: 15px; font-family: inherit; outline: none;
+  }
+  .text-input:focus, .text-area:focus { border-color: var(--accent); }
+  .text-area { resize: vertical; min-height: 100px; }
+  .text-input::placeholder, .text-area::placeholder { color: var(--gray); }
+  .footer {
+    padding: 16px 24px; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    max-width: 560px; width: 100%; margin: 0 auto;
+  }
+  .btn-primary {
+    padding: 13px 34px; border-radius: 28px; border: none;
+    background: var(--accent); color: #1a2332;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: all .25s; letter-spacing: .2px;
+  }
+  .btn-primary:disabled { background: var(--border); color: #556; cursor: not-allowed; }
+  .btn-ghost {
+    padding: 13px 28px; border-radius: 28px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--gray-light); font-size: 15px; cursor: pointer; font-family: inherit;
+  }
+  .done-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+  .done-box { max-width: 560px; width: 100%; text-align: center; }
+  .done-emoji { font-size: 56px; margin-bottom: 16px; }
+  .done-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; color: var(--accent); }
+  .done-sub { color: var(--gray); margin-bottom: 28px; font-size: 15px; }
+  .msg-preview {
+    background: var(--bg-header); border-radius: 12px; padding: 20px;
+    text-align: left; white-space: pre-wrap; font-size: 14px; line-height: 1.65;
+    color: var(--gray-light); border: 1px solid var(--border);
+    max-height: 400px; overflow-y: auto; margin-bottom: 24px;
+  }
+  .done-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .field-wrap { width: 100%; margin-bottom: 16px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const CLINICAS = ["Clínica Demo 1", "Clínica Demo 2", "Clínica Demo 3"];
+const TRATAMIENTOS = ["Implantes","Ortodoncia","Brackets","Carillas / Estética","Prótesis","Endodoncia","Extracción","Limpieza profunda","Otro"];
+const ZONAS = ["Superior frontal","Superior posterior","Inferior frontal","Inferior posterior","Ambas arcadas","Boca completa"];
+const PRESUPUESTOS = ["Menos de $5,000","$5,000 – $15,000","$15,000 – $30,000","$30,000 – $60,000","Más de $60,000","No definido"];
+const METODOS_PAGO = ["Efectivo","Tarjeta de débito","Tarjeta de crédito","Transferencia","Por definir"];
+const ESTADOS = ["Cita agendada","Interesado – seguimiento pendiente","No interesado","No se presentó a la videollamada"];
+const FUENTES = ["Facebook","Instagram","Google","Referido","Otro"];
+const COMPROMISO = ["Alto","Medio","Bajo"];
+
+let state = { step: 0, data: {}, submitted: false, copied: false };
+
+function getSteps() {
+  const d = state.data;
+  const base = [
+    { section: null, title: "Registro de videollamada", subtitle: "Completa la información del paciente y el resultado de la llamada. Toma menos de 2 minutos.", type: "welcome" },
+    { section: "Datos del paciente", title: "¿Cuál es el nombre completo del paciente?", type: "text", key: "nombre", placeholder: "Ej. Juan Pérez López", required: true },
+    { section: "Datos del paciente", title: "Teléfono / WhatsApp", type: "tel", key: "telefono", placeholder: "Ej. 55 1234 5678", required: true },
+    { section: "Datos del paciente", title: "Edad del paciente", type: "number", key: "edad", placeholder: "Ej. 34", required: true },
+    { section: "Datos del paciente", title: "Ciudad o zona", type: "text", key: "ciudad", placeholder: "Ej. CDMX – Polanco", required: true },
+    { section: "Datos del paciente", title: "¿Cómo se enteró de la clínica?", type: "single", key: "fuente", options: FUENTES, required: true },
+    { section: "Motivo de consulta", title: "¿Qué tratamiento busca?", subtitle: "Puedes seleccionar varios", type: "multi", key: "tratamientos", options: TRATAMIENTOS, required: true },
+    { section: "Motivo de consulta", title: "Descripción breve del caso", subtitle: "Con tus palabras, ¿qué te contó el paciente?", type: "area", key: "descripcion", placeholder: "Ej. Le falta el molar 36, lleva 2 años sin la pieza..." },
+    { section: "Motivo de consulta", title: "¿Tiene dolor o molestia actualmente?", type: "single", key: "dolor", options: ["Sí","No"], required: true },
+    { section: "Motivo de consulta", title: "¿Ha tenido tratamiento dental previo relacionado?", type: "single", key: "tratamientoPrevio", options: ["Sí","No","No sabe"], required: true },
+    { section: "Motivo de consulta", title: "Zona afectada", subtitle: "Puedes seleccionar varias", type: "multi", key: "zonas", options: ZONAS, required: true },
+    { section: "Situación financiera", title: "Presupuesto aproximado del paciente (MXN)", type: "single", key: "presupuesto", options: PRESUPUESTOS, required: true },
+    { section: "Situación financiera", title: "¿Necesita financiamiento o plan de pagos?", type: "single", key: "financiamiento", options: ["Sí","No","Tal vez"], required: true },
+    { section: "Situación financiera", title: "Método de pago preferido", type: "single", key: "metodoPago", options: METODOS_PAGO, required: true },
+    { section: "Resultado de la videollamada", title: "¿Cuál fue el resultado?", type: "single", key: "estado", options: ESTADOS, required: true, col: true },
+  ];
+
+  const cond = [];
+  if (d.estado === "Cita agendada") {
+    cond.push(
+      { section: "Datos de la cita", title: "Fecha de la cita presencial", type: "date", key: "fechaCita", required: true },
+      { section: "Datos de la cita", title: "Hora de la cita", type: "time", key: "horaCita", required: true },
+      { section: "Datos de la cita", title: "Clínica asignada", type: "single", key: "clinica", options: CLINICAS, required: true, col: true },
+      { section: "Datos de la cita", title: "Tratamiento acordado", type: "text", key: "tratamientoAcordado", placeholder: "Ej. Implante molar inferior + corona", required: true },
+      { section: "Datos de la cita", title: "Precio o rango presentado al paciente", type: "text", key: "precioPresent", placeholder: "Ej. $22,000 MXN", required: true },
+    );
+  }
+  if (d.estado === "Interesado – seguimiento pendiente") {
+    cond.push(
+      { section: "Seguimiento", title: "Fecha de siguiente contacto", type: "date", key: "fechaSeguimiento", required: true },
+      { section: "Seguimiento", title: "¿Qué falta para cerrar?", type: "area", key: "queFalta", placeholder: "Ej. Quiere consultarlo con su esposa...", required: true },
+    );
+  }
+
+  const fin = [
+    { section: "Notas del asesor", title: "Nivel de compromiso del paciente", type: "single", key: "compromiso", options: COMPROMISO, required: true },
+    { section: "Notas del asesor", title: "Observaciones adicionales", subtitle: "Cualquier dato relevante para la clínica", type: "area", key: "notas", placeholder: "Ej. Paciente muy decidido, viene con radiografía previa..." },
+  ];
+
+  return [...base, ...cond, ...fin];
+}
+
+function isValid(step) {
+  const s = getSteps()[state.step];
+  if (s.type === "welcome") return true;
+  if (!s.required) return true;
+  const v = state.data[s.key];
+  if (s.type === "multi") return v && v.length > 0;
+  return !!v && (typeof v !== "string" || v.trim() !== "");
+}
+
+function buildWA() {
+  const d = state.data;
+  const e = d.estado === "Cita agendada" ? "✅" : d.estado === "Interesado – seguimiento pendiente" ? "🔄" : d.estado === "No interesado" ? "❌" : "⚠️";
+  let m = `🦷 *${e} ${d.estado}*\n\n*Paciente:* ${d.nombre}\n*Tel:* ${d.telefono}\n*Edad:* ${d.edad}\n*Ciudad:* ${d.ciudad}\n*Fuente:* ${d.fuente}\n\n`;
+  m += `*Tratamiento buscado:* ${(d.tratamientos||[]).join(", ")}\n*Zona:* ${(d.zonas||[]).join(", ")}\n*Descripción:* ${d.descripcion || "—"}\n*Dolor actual:* ${d.dolor}\n*Tratamiento previo:* ${d.tratamientoPrevio}\n\n`;
+  m += `*Presupuesto:* ${d.presupuesto}\n*Financiamiento:* ${d.financiamiento}\n*Método de pago:* ${d.metodoPago}\n\n`;
+  if (d.estado === "Cita agendada") m += `*📅 Fecha cita:* ${d.fechaCita}\n*🕐 Hora:* ${d.horaCita}\n*🏥 Clínica:* ${d.clinica}\n*Tratamiento acordado:* ${d.tratamientoAcordado}\n*Precio presentado:* ${d.precioPresent}\n\n`;
+  if (d.estado === "Interesado – seguimiento pendiente") m += `*📅 Siguiente contacto:* ${d.fechaSeguimiento}\n*¿Qué falta?:* ${d.queFalta}\n\n`;
+  m += `*Compromiso:* ${d.compromiso}\n*Notas:* ${d.notas || "—"}`;
+  return m;
+}
+
+function render() {
+  const steps = getSteps();
+  const total = steps.length;
+  const cur = steps[state.step];
+  const pct = ((state.step + 1) / total) * 100;
+  const valid = isValid();
+  const isWelcome = state.step === 0;
+  const isLast = state.step === total - 1;
+
+  if (state.submitted) {
+    const msg = buildWA();
+    document.getElementById("app").innerHTML = `
+      <div class="header">
+        <span class="header-brand">Growth Dental Systems</span>
+      </div>
+      <div class="done-screen">
+        <div class="done-box">
+          <div class="done-emoji">✅</div>
+          <h1 class="done-title">Registro completado</h1>
+          <p class="done-sub">Copia el mensaje y pégalo en el grupo de WhatsApp de la clínica.</p>
+          <div class="msg-preview">${escapeHtml(msg)}</div>
+          <div class="done-btns">
+            <button class="btn-primary" onclick="copyMsg()">
+              ${state.copied ? "✓ Copiado" : "Copiar mensaje"}
+            </button>
+            <button class="btn-ghost" onclick="resetForm()">Nuevo registro</button>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  let fieldHtml = "";
+  if (cur.type === "welcome") {
+    // no field
+  } else if (cur.type === "text" || cur.type === "tel" || cur.type === "number" || cur.type === "date" || cur.type === "time") {
+    fieldHtml = `<div class="field-wrap"><input class="text-input" type="${cur.type}" value="${escapeAttr(state.data[cur.key]||"")}" placeholder="${escapeAttr(cur.placeholder||"")}" oninput="setVal('${cur.key}',this.value)"></div>`;
+  } else if (cur.type === "area") {
+    fieldHtml = `<div class="field-wrap"><textarea class="text-area" placeholder="${escapeAttr(cur.placeholder||"")}" oninput="setVal('${cur.key}',this.value)">${escapeHtml(state.data[cur.key]||"")}</textarea></div>`;
+  } else if (cur.type === "single") {
+    fieldHtml = `<div class="pills ${cur.col?"col":""}">${cur.options.map(o =>
+      `<button class="pill ${state.data[cur.key]===o?"active":""}" onclick="setVal('${cur.key}','${escapeAttr(o)}')">${escapeHtml(o)}</button>`
+    ).join("")}</div>`;
+  } else if (cur.type === "multi") {
+    const arr = state.data[cur.key] || [];
+    fieldHtml = `<div class="pills">${cur.options.map(o =>
+      `<button class="pill ${arr.includes(o)?"active":""}" onclick="toggleVal('${cur.key}','${escapeAttr(o)}')">${escapeHtml(o)}</button>`
+    ).join("")}</div>`;
+  }
+
+  document.getElementById("app").innerHTML = `
+    <div class="header">
+      <span class="header-brand">Growth Dental Systems</span>
+      <span class="header-counter">${state.step + 1} / ${total}</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="content">
+      ${isWelcome ? `<p class="brand-center">Growth Dental Systems</p>` : ""}
+      ${cur.section && !isWelcome ? `<span class="section-label">${escapeHtml(cur.section)}</span>` : ""}
+      <h2 class="title ${isWelcome?"welcome":""}">${escapeHtml(cur.title)}</h2>
+      ${cur.subtitle ? `<p class="subtitle ${isWelcome?"welcome":""}">${escapeHtml(cur.subtitle)}</p>` : ""}
+      ${isWelcome ? `<div class="time-badge">⏱ 2 minutos</div>` : ""}
+      ${fieldHtml}
+    </div>
+    <div class="footer">
+      ${state.step > 0 ? `<button class="btn-ghost" onclick="goBack()">← Atrás</button>` : `<div></div>`}
+      ${isWelcome
+        ? `<button class="btn-primary" onclick="goNext()">Empezar →</button>`
+        : isLast
+          ? `<button class="btn-primary" onclick="submit()" ${!valid?"disabled":""}>Enviar ✓</button>`
+          : `<button class="btn-primary" onclick="goNext()" ${!valid?"disabled":""}>Siguiente →</button>`
+      }
+    </div>`;
+}
+
+function escapeHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function escapeAttr(s) { return String(s).replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
+
+function setVal(k, v) { state.data[k] = v; render(); }
+function toggleVal(k, v) {
+  const arr = state.data[k] || [];
+  state.data[k] = arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v];
+  render();
+}
+function goNext() { const steps = getSteps(); if (state.step < steps.length - 1) { state.step++; render(); } }
+function goBack() { if (state.step > 0) { state.step--; render(); } }
+function submit() { state.submitted = true; render(); }
+function resetForm() { state = { step: 0, data: {}, submitted: false, copied: false }; render(); }
+function copyMsg() {
+  navigator.clipboard.writeText(buildWA()).then(() => {
+    state.copied = true; render();
+    setTimeout(() => { state.copied = false; render(); }, 2500);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
